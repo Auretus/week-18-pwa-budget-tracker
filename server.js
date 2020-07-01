@@ -3,9 +3,21 @@ const logger = require("morgan");
 const mongoose = require("mongoose");
 const compression = require("compression");
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 const app = express();
+
+const redirectToHTTPS = require("express-http-to-https").redirectToHTTPS;
+
+app.use(redirectToHTTPS([/localhost:(\d{4})/], [/\/insecure/], 301));
+
+app.get('/', function (req,res) {
+  res.sendFile(__dirname + "/public/index.html");
+});
+
+app.get("/insecure", function(req, res) {
+  res.send("You are on an insecure connection! Please change the front of the url from 'http://' to 'https:// and try again.");
+});
 
 app.use(logger("dev"));
 
@@ -15,9 +27,9 @@ app.use(express.json());
 
 app.use(express.static("public"));
 
-mongoose.connect("mongodb://localhost/budget", {
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/budget", {
   useNewUrlParser: true,
-  useFindAndModify: false
+  useFindAndModify: false,
 });
 
 // routes
